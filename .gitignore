@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+backend/venv/
+.env
+.venv
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unnecessary scripts (debug/temp)
+check_gpu.py
+debug_config.py
+check_api.py
+setup_models.py
+
+# Database
+*.db
+*.sqlite3
+database/*.db
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Models (Exclude large weight files)
+models/medgemma/
+models/cxr_foundation/
+models/path_foundation/
+
+# Keep model code
+!models/__init__.py
+
+# Logs
+logs/
+*.log
+
+
+# Reports and Uploads (Local runtime data)
+reports/
+uploads/
+
+
+# Linter Cache
+.ruff_cache/
+.pytest_cache/
+mypy_cache/
+
+
+# Node
+node_modules/
+frontend/node_modules/
+build/
+frontend/build/
