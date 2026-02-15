@@ -47,8 +47,8 @@ function Reports() {
     try {
       setLoading(true);
       const response = await getDiagnoses();
-      const completed = response.data.filter(d => d.status === 'completed');
-      setDiagnoses(completed);
+      const reportable = response.data.filter(d => d.status !== 'pending' && d.status !== 'processing');
+      setDiagnoses(reportable);
     } catch (err) {
       setError('Failed to load diagnoses');
       console.error(err);

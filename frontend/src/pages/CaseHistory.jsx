@@ -11,6 +11,7 @@ import {
   Paper,
   Chip,
   LinearProgress,
+  CircularProgress,
   Alert,
   Button,
   Dialog,
@@ -31,8 +32,10 @@ import {
   Cancel as CancelIcon,
   HourglassEmpty as PendingIcon,
   Refresh as RefreshIcon,
+  PictureAsPdf as PdfIcon,
+  TextSnippet as TextIcon,
 } from '@mui/icons-material';
-import { getDiagnoses, getDiagnosis, retryDiagnosis } from '../services/api';
+import { getDiagnoses, getDiagnosis, retryDiagnosis, generateReport, downloadReport } from '../services/api';
 
 function AgentStatusChip({ label, data, skippedText }) {
   if (!data) {
@@ -87,6 +90,7 @@ function CaseHistory() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState(null);
+  const [reportGenerating, setReportGenerating] = useState(null); // 'pdf' or 'txt' or null
 
   useEffect(() => {
     fetchDiagnoses();
@@ -510,7 +514,72 @@ function CaseHistory() {
             </Grid>
           ) : null}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
+          <Box display="flex" gap={1}>
+            {selectedDiagnosis && !detailError && (
+              <>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="error"
+                  startIcon={reportGenerating === 'pdf' ? <CircularProgress size={16} /> : <PdfIcon />}
+                  disabled={!!reportGenerating}
+                  onClick={async () => {
+                    try {
+                      setReportGenerating('pdf');
+                      const res = await generateReport(selectedDiagnosis.id, true, 'pdf');
+                      const fname = res.data.report_path.split('/').pop().split('\\').pop();
+                      const blob = await downloadReport(fname);
+                      const url = window.URL.createObjectURL(new Blob([blob.data]));
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.setAttribute('download', `PathRad_Report_${selectedDiagnosis.patient?.case_id || selectedDiagnosis.id.slice(0, 8)}.pdf`);
+                      document.body.appendChild(link);
+                      link.click();
+                      link.remove();
+                      window.URL.revokeObjectURL(url);
+                    } catch (err) {
+                      console.error('PDF generation failed:', err);
+                      setDetailError(`PDF generation failed: ${err?.response?.data?.detail || err.message}`);
+                    } finally {
+                      setReportGenerating(null);
+                    }
+                  }}
+                >
+                  {reportGenerating === 'pdf' ? 'Generating...' : 'Download PDF'}
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={reportGenerating === 'txt' ? <CircularProgress size={16} /> : <TextIcon />}
+                  disabled={!!reportGenerating}
+                  onClick={async () => {
+                    try {
+                      setReportGenerating('txt');
+                      const res = await generateReport(selectedDiagnosis.id, false, 'txt');
+                      const fname = res.data.report_path.split('/').pop().split('\\').pop();
+                      const blob = await downloadReport(fname);
+                      const url = window.URL.createObjectURL(new Blob([blob.data]));
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.setAttribute('download', `PathRad_Report_${selectedDiagnosis.patient?.case_id || selectedDiagnosis.id.slice(0, 8)}.txt`);
+                      document.body.appendChild(link);
+                      link.click();
+                      link.remove();
+                      window.URL.revokeObjectURL(url);
+                    } catch (err) {
+                      console.error('TXT generation failed:', err);
+                      setDetailError(`TXT generation failed: ${err?.response?.data?.detail || err.message}`);
+                    } finally {
+                      setReportGenerating(null);
+                    }
+                  }}
+                >
+                  {reportGenerating === 'txt' ? 'Generating...' : 'Download TXT'}
+                </Button>
+              </>
+            )}
+          </Box>
           <Button onClick={() => { setDialogOpen(false); setDetailError(null); }}>
             Close
           </Button>
