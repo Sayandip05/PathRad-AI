@@ -38,8 +38,10 @@ def generate_text_report(diagnosis, patient, include_details: bool = True) -> st
     lines.append("-" * 70)
     lines.append("PATIENT INFORMATION")
     lines.append("-" * 70)
+    lines.append(f"Patient Name: {patient.first_name} {patient.last_name}")
     lines.append(f"Age: {patient.age} years")
     lines.append(f"Sex: {patient.sex}")
+    lines.append(f"Location: {patient.location or 'N/A'}")
     lines.append(f"Case ID: {patient.case_id}")
 
     if patient.chief_complaint:

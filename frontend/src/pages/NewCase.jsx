@@ -26,8 +26,9 @@ import {
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
   CloudUpload as CloudUploadIcon,
+  Description as DescriptionIcon,
 } from '@mui/icons-material';
-import { createPatient, uploadImage, createDiagnosis } from '../services/api';
+import { createPatient, uploadImage, createDiagnosis, uploadClinicalHistoryPDF } from '../services/api';
 import VoiceInput from '../components/VoiceInput';
 
 const steps = ['Patient Information', 'Upload Images', 'Review & Submit'];
@@ -35,11 +36,15 @@ const steps = ['Patient Information', 'Upload Images', 'Review & Submit'];
 function NewCase() {
   const [activeStep, setActiveStep] = useState(0);
   const [patientData, setPatientData] = useState({
+    first_name: '',
+    last_name: '',
     age: '',
     sex: '',
+    location: '',
     chief_complaint: '',
     clinical_history: '',
   });
+  const [clinicalHistoryPdf, setClinicalHistoryPdf] = useState(null);
   const [xrayFile, setXrayFile] = useState(null);
   const [microscopyFile, setMicroscopyFile] = useState(null);
   const [patientId, setPatientId] = useState(null);
@@ -70,7 +75,13 @@ function NewCase() {
       if (activeStep === 0) {
         // Create patient
         const response = await createPatient(patientData);
-        setPatientId(response.data.id);
+        const newPatientId = response.data.id;
+        setPatientId(newPatientId);
+
+        // Upload clinical history PDF if provided
+        if (clinicalHistoryPdf) {
+          await uploadClinicalHistoryPDF(newPatientId, clinicalHistoryPdf);
+        }
       } else if (activeStep === 1) {
         // Upload images
         if (xrayFile) {
@@ -114,6 +125,26 @@ function NewCase() {
               <TextField
                 required
                 fullWidth
+                label="First Name"
+                value={patientData.first_name}
+                onChange={handlePatientChange('first_name')}
+                placeholder="e.g., John"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                required
+                fullWidth
+                label="Last Name"
+                value={patientData.last_name}
+                onChange={handlePatientChange('last_name')}
+                placeholder="e.g., Doe"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                required
+                fullWidth
                 label="Age"
                 type="number"
                 value={patientData.age}
@@ -133,6 +164,15 @@ function NewCase() {
                   <MenuItem value="other">Other</MenuItem>
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Location"
+                value={patientData.location}
+                onChange={handlePatientChange('location')}
+                placeholder="e.g., Mumbai, India"
+              />
             </Grid>
             <Grid item xs={12}>
               <TextField
@@ -163,6 +203,27 @@ function NewCase() {
                 onChange={handlePatientChange('clinical_history')}
                 placeholder="Patient's medical history, risk factors, medications, etc."
               />
+              <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<DescriptionIcon />}
+                  size="small"
+                >
+                  Upload History PDF
+                  <input
+                    type="file"
+                    hidden
+                    accept=".pdf"
+                    onChange={(e) => setClinicalHistoryPdf(e.target.files[0])}
+                  />
+                </Button>
+                {clinicalHistoryPdf && (
+                  <Typography variant="body2" color="success.main">
+                    📎 {clinicalHistoryPdf.name}
+                  </Typography>
+                )}
+              </Box>
               <Box sx={{ mt: 2 }}>
                 <VoiceInput
                   inputType="clinical_history"
@@ -249,6 +310,12 @@ function NewCase() {
               <List>
                 <ListItem>
                   <ListItemText
+                    primary="Patient Name"
+                    secondary={`${patientData.first_name} ${patientData.last_name}`}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText
                     primary="Patient Age"
                     secondary={patientData.age}
                   />
@@ -259,6 +326,14 @@ function NewCase() {
                     secondary={patientData.sex}
                   />
                 </ListItem>
+                {patientData.location && (
+                  <ListItem>
+                    <ListItemText
+                      primary="Location"
+                      secondary={patientData.location}
+                    />
+                  </ListItem>
+                )}
                 <ListItem>
                   <ListItemText
                     primary="Chief Complaint"
@@ -352,7 +427,7 @@ function NewCase() {
           onClick={handleNext}
           disabled={
             loading ||
-            (activeStep === 0 && (!patientData.age || !patientData.sex)) ||
+            (activeStep === 0 && (!patientData.first_name || !patientData.last_name || !patientData.age || !patientData.sex)) ||
             (activeStep === 1 && !xrayFile)
           }
         >

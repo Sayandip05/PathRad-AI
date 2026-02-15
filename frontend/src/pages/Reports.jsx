@@ -63,23 +63,23 @@ function Reports() {
     try {
       setGenerating(true);
       const response = await generateReport(selectedDiagnosis.id, includeImages, reportFormat);
-      
+
       const downloadResponse = await downloadReport(
         response.data.report_path.split('/').pop()
       );
-      
+
       const url = window.URL.createObjectURL(new Blob([downloadResponse.data]));
       const link = document.createElement('a');
       link.href = url;
-      
+
       const extension = reportFormat === 'txt' ? 'txt' : 'pdf';
       link.setAttribute('download', `PathRad_Report_${selectedDiagnosis.patient?.case_id}.${extension}`);
-      
+
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      
+
       setDialogOpen(false);
     } catch (err) {
       setError('Failed to generate report');
@@ -148,7 +148,7 @@ function Reports() {
                 <TableRow key={diagnosis.id}>
                   <TableCell>{diagnosis.patient?.case_id}</TableCell>
                   <TableCell>
-                    {diagnosis.patient?.age}y {diagnosis.patient?.sex}
+                    {diagnosis.patient?.first_name} {diagnosis.patient?.last_name} ({diagnosis.patient?.age}y {diagnosis.patient?.sex})
                   </TableCell>
                   <TableCell>
                     {diagnosis.primary_diagnosis || 'N/A'}
@@ -206,7 +206,7 @@ function Reports() {
               disabled
               sx={{ mb: 3 }}
             />
-            
+
             <Typography variant="subtitle2" gutterBottom>
               Report Format
             </Typography>
@@ -240,7 +240,7 @@ function Reports() {
             )}
 
             <Alert severity="info" sx={{ mt: 2 }}>
-              {reportFormat === 'pdf' 
+              {reportFormat === 'pdf'
                 ? 'PDF reports include formatted layout with optional images. Best for sharing with doctors.'
                 : 'Text reports are lightweight and easy to share via SMS/WhatsApp. Best for quick sharing.'}
             </Alert>

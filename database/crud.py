@@ -7,15 +7,21 @@ from datetime import datetime
 # Patient CRUD
 def create_patient(
     db: Session,
+    first_name: str,
+    last_name: str,
     age: int,
     sex: str,
+    location: Optional[str] = None,
     chief_complaint: Optional[str] = None,
     clinical_history: Optional[str] = None,
 ) -> Patient:
     """Create a new patient record"""
     patient = Patient(
+        first_name=first_name,
+        last_name=last_name,
         age=age,
         sex=sex,
+        location=location,
         chief_complaint=chief_complaint,
         clinical_history=clinical_history,
     )

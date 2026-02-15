@@ -19,8 +19,11 @@ class UrgencyLevel(str, Enum):
 
 # Patient Schemas
 class PatientBase(BaseModel):
+    first_name: str = Field(..., min_length=1, max_length=100)
+    last_name: str = Field(..., min_length=1, max_length=100)
     age: int = Field(..., ge=0, le=150)
     sex: Sex
+    location: Optional[str] = None
     chief_complaint: Optional[str] = None
     clinical_history: Optional[str] = None
 
@@ -32,6 +35,7 @@ class PatientCreate(PatientBase):
 class PatientResponse(PatientBase):
     id: str
     case_id: str
+    clinical_history_pdf: Optional[str] = None
     created_at: datetime
 
     class Config:

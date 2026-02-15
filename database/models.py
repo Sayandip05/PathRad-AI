@@ -31,12 +31,16 @@ class Patient(Base):
     )
 
     # Demographics
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
     age = Column(Integer, nullable=False)
     sex = Column(String(10), nullable=False)
+    location = Column(String(200), nullable=True)
 
     # Clinical Information
     chief_complaint = Column(Text)
     clinical_history = Column(Text)
+    clinical_history_pdf = Column(String(500), nullable=True)
 
     # Metadata
     created_at = Column(DateTime, default=datetime.utcnow)

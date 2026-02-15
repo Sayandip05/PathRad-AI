@@ -138,7 +138,7 @@ function CaseHistory() {
               <TableRow key={diagnosis.id}>
                 <TableCell>{diagnosis.patient?.case_id}</TableCell>
                 <TableCell>
-                  {diagnosis.patient?.age}y {diagnosis.patient?.sex}
+                  {diagnosis.patient?.first_name} {diagnosis.patient?.last_name} ({diagnosis.patient?.age}y {diagnosis.patient?.sex})
                 </TableCell>
                 <TableCell>
                   {new Date(diagnosis.created_at).toLocaleDateString()}
@@ -212,6 +212,12 @@ function CaseHistory() {
                     <List dense>
                       <ListItem>
                         <ListItemText
+                          primary="Name"
+                          secondary={`${selectedDiagnosis.patient?.first_name} ${selectedDiagnosis.patient?.last_name}`}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemText
                           primary="Age"
                           secondary={selectedDiagnosis.patient?.age}
                         />
@@ -222,6 +228,14 @@ function CaseHistory() {
                           secondary={selectedDiagnosis.patient?.sex}
                         />
                       </ListItem>
+                      {selectedDiagnosis.patient?.location && (
+                        <ListItem>
+                          <ListItemText
+                            primary="Location"
+                            secondary={selectedDiagnosis.patient?.location}
+                          />
+                        </ListItem>
+                      )}
                       <ListItem>
                         <ListItemText
                           primary="Chief Complaint"

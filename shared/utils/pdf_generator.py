@@ -46,9 +46,11 @@ def generate_diagnosis_report(
     # Patient Information
     story.append(Paragraph("Patient Information", styles["Heading2"]))
     patient_data = [
+        ["Patient Name:", f"{patient.first_name} {patient.last_name}"],
         ["Case ID:", patient.case_id],
         ["Age:", f"{patient.age} years"],
         ["Sex:", patient.sex],
+        ["Location:", patient.location or "N/A"],
         ["Date:", datetime.now().strftime("%Y-%m-%d %H:%M")],
     ]
 
