@@ -14,15 +14,15 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Quality thresholds
+# Quality thresholds (relaxed for real-world clinical images)
 QUALITY_THRESHOLDS = {
-    "min_resolution": (512, 512),
-    "max_resolution": (4096, 4096),
-    "brightness_min": 30,  # 0-255 scale
-    "brightness_max": 225,
-    "contrast_min": 40,
-    "sharpness_min": 100,
-    "snr_min": 2.0,
+    "min_resolution": (224, 224),
+    "max_resolution": (8192, 8192),
+    "brightness_min": 10,  # 0-255 scale
+    "brightness_max": 245,
+    "contrast_min": 15,
+    "sharpness_min": 5,  # Laplacian variance — real X-rays are often low
+    "snr_min": 0.5,  # Signal-to-noise — permissive for phone captures
 }
 
 # Model input sizes

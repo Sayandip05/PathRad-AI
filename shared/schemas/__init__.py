@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
@@ -54,36 +54,40 @@ class ImageUploadResponse(BaseModel):
 
 # Diagnosis Schemas
 class TriageResult(BaseModel):
-    urgency_level: UrgencyLevel
-    urgency_score: float = Field(..., ge=0, le=10)
-    critical_flags: List[str]
-    quality_assessment: Dict[str, Any]
-    inference_time_ms: float
+    model_config = ConfigDict(extra='ignore')
+    urgency_level: Optional[str] = None
+    urgency_score: Optional[float] = None
+    critical_flags: Optional[List[str]] = None
+    quality_score: Optional[float] = None
+    inference_time_ms: Optional[float] = None
 
 
 class RadiologyResult(BaseModel):
-    findings: List[str]
-    primary_diagnosis: str
-    differential_diagnoses: List[str]
-    confidence: float = Field(..., ge=0, le=1)
-    tb_probability: float = Field(..., ge=0, le=1)
-    localization: Dict[str, Any]
+    model_config = ConfigDict(extra='ignore')
+    findings: Optional[List[str]] = None
+    primary_diagnosis: Optional[str] = None
+    differential_diagnoses: Optional[List[str]] = None
+    confidence: Optional[float] = None
+    tb_probability: Optional[float] = None
+    localization: Optional[Dict[str, Any]] = None
 
 
 class PathologyResult(BaseModel):
-    test_type: str
-    result: str
-    quantification: Optional[str]
-    bacilli_count: int
-    confidence: float = Field(..., ge=0, le=1)
+    model_config = ConfigDict(extra='ignore')
+    test_type: Optional[str] = None
+    result: Optional[str] = None
+    quantification: Optional[str] = None
+    bacilli_count: Optional[int] = None
+    confidence: Optional[float] = None
 
 
 class ClinicalContext(BaseModel):
-    structured_history: Dict[str, Any]
-    risk_scores: Dict[str, float]
-    relevant_symptoms: List[str]
-    comorbidities: List[str]
-    risk_factors: List[str]
+    model_config = ConfigDict(extra='ignore')
+    structured_history: Optional[Dict[str, Any]] = None
+    risk_scores: Optional[Dict[str, float]] = None
+    relevant_symptoms: Optional[List[str]] = None
+    comorbidities: Optional[List[str]] = None
+    risk_factors: Optional[List[str]] = None
 
 
 class DiagnosisCreate(BaseModel):

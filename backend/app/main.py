@@ -165,6 +165,99 @@ async def health_check():
     }
 
 
+@app.get("/health/detailed")
+async def health_check_detailed():
+    """Detailed health check with per-model and per-agent status"""
+    import torch
+
+    # GPU info
+    gpu_info = {}
+    if torch.cuda.is_available():
+        gpu_info = {
+            "available": True,
+            "device": torch.cuda.get_device_name(0),
+            "memory_total": f"{torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB",
+            "memory_allocated": f"{torch.cuda.memory_allocated(0) / 1e9:.2f} GB",
+        }
+    else:
+        gpu_info = {"available": False}
+
+    # Per-model status
+    medgemma_loaded = model_manager.medgemma_model is not None
+    cxr_loaded = model_manager.cxr_model is not None
+    path_loaded = model_manager.path_model is not None
+
+    models = {
+        "medgemma": {
+            "loaded": medgemma_loaded,
+            "name": "MedGemma 4B",
+            "device": "cpu" if medgemma_loaded else "n/a",
+            "description": "Multimodal medical AI for text generation and diagnosis",
+        },
+        "cxr_foundation": {
+            "loaded": cxr_loaded,
+            "name": "CXR Foundation",
+            "device": "gpu" if cxr_loaded and torch.cuda.is_available() else ("cpu" if cxr_loaded else "n/a"),
+            "description": "Chest X-ray feature extraction and analysis",
+        },
+        "path_foundation": {
+            "loaded": path_loaded,
+            "name": "Path Foundation",
+            "device": "cpu" if path_loaded else "n/a",
+            "description": "Pathology/microscopy image analysis",
+        },
+    }
+
+    # Per-agent status (derived from model availability)
+    agent_deps = {
+        "triage": ["cxr_foundation"],
+        "radiologist": ["cxr_foundation", "medgemma"],
+        "pathologist": ["path_foundation"],
+        "clinical_context": [],
+        "orchestrator": [],
+    }
+
+    agent_descriptions = {
+        "triage": "Rapid initial assessment, urgency scoring & image quality gates",
+        "radiologist": "Chest X-ray analysis using CXR Foundation + MedGemma",
+        "pathologist": "Microscopy / AFB smear analysis using Path Foundation",
+        "clinical_context": "Patient history parsing, symptom extraction & risk scoring",
+        "orchestrator": "Master coordinator — runs full pipeline & synthesizes report",
+    }
+
+    model_loaded_map = {
+        "medgemma": medgemma_loaded,
+        "cxr_foundation": cxr_loaded,
+        "path_foundation": path_loaded,
+    }
+
+    agents = {}
+    for agent_name, deps in agent_deps.items():
+        all_deps_loaded = all(model_loaded_map.get(d, True) for d in deps)
+        if not deps:
+            status = "ready"
+        elif all_deps_loaded:
+            status = "ready"
+        elif any(model_loaded_map.get(d, False) for d in deps):
+            status = "degraded"
+        else:
+            status = "offline"
+
+        agents[agent_name] = {
+            "status": status,
+            "description": agent_descriptions[agent_name],
+            "depends_on": deps,
+        }
+
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "gpu": gpu_info,
+        "models": models,
+        "agents": agents,
+    }
+
+
 @app.get("/api/stats")
 async def get_stats(db: Session = Depends(get_db)):
     """Get system statistics"""

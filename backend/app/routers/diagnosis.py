@@ -79,24 +79,46 @@ def get_diagnosis(diagnosis_id: str, db: Session = Depends(get_db)):
     if not diagnosis:
         raise HTTPException(status_code=404, detail="Diagnosis not found")
 
-    # Parse stored JSON fields
-    diagnosis_detail = DiagnosisDetail(
-        **diagnosis.__dict__,
-        triage_result=TriageResult(**diagnosis.triage_result)
-        if diagnosis.triage_result
-        else None,
-        radiology_result=RadiologyResult(**diagnosis.radiology_result)
-        if diagnosis.radiology_result
-        else None,
-        pathology_details=PathologyResult(**diagnosis.pathology_details)
-        if diagnosis.pathology_details
-        else None,
-        clinical_context=ClinicalContext(**diagnosis.clinical_context)
-        if diagnosis.clinical_context
-        else None,
-    )
+    # Use DiagnosisResponse to properly resolve ORM relationships (patient etc.)
+    base = DiagnosisResponse.model_validate(diagnosis)
+    base_dict = base.model_dump()
 
-    return diagnosis_detail
+    # Safely parse agent JSON fields — if schema mismatch, store as None
+    parsed_triage = None
+    if diagnosis.triage_result and isinstance(diagnosis.triage_result, dict):
+        try:
+            parsed_triage = TriageResult(**diagnosis.triage_result)
+        except Exception:
+            parsed_triage = None
+
+    parsed_radiology = None
+    if diagnosis.radiology_result and isinstance(diagnosis.radiology_result, dict):
+        try:
+            parsed_radiology = RadiologyResult(**diagnosis.radiology_result)
+        except Exception:
+            parsed_radiology = None
+
+    parsed_pathology = None
+    if diagnosis.pathology_details and isinstance(diagnosis.pathology_details, dict):
+        try:
+            parsed_pathology = PathologyResult(**diagnosis.pathology_details)
+        except Exception:
+            parsed_pathology = None
+
+    parsed_clinical = None
+    if diagnosis.clinical_context and isinstance(diagnosis.clinical_context, dict):
+        try:
+            parsed_clinical = ClinicalContext(**diagnosis.clinical_context)
+        except Exception:
+            parsed_clinical = None
+
+    return DiagnosisDetail(
+        **base_dict,
+        triage_result=parsed_triage,
+        radiology_result=parsed_radiology,
+        pathology_details=parsed_pathology,
+        clinical_context=parsed_clinical,
+    )
 
 
 @router.get("/patient/{patient_id}", response_model=List[DiagnosisResponse])

@@ -55,5 +55,6 @@ export const getStats = () => api.get('/stats');
 
 // Health Check
 export const healthCheck = () => axios.get(`${API_BASE_URL.replace('/api', '')}/health`);
+export const healthCheckDetailed = () => axios.get(`${API_BASE_URL.replace('/api', '')}/health/detailed`);
 
 export default api;
